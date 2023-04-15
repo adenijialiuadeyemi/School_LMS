@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+<title>{% block title %}Home Page{% endblock %}</title>
+{% block content %}
+<h1>Home Page</h1>
+<p class="lead">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quam alias nihil voluptatibus, quasi numquam
+    harum corporis vitae? At debitis commodi, ea officia tempora pariatur optio quidem sed? Iste, saepe obcaecati.</p>
+<a class="btn btn-lg btn-primary" href="{% url 'register' %}" role="button">Register a User
+    &raquo;</a>
+
+{% endblock %}

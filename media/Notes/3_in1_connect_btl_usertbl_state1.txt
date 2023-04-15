@@ -1,0 +1,394 @@
+views.py
+
+
+from django.shortcuts import render ,redirect ,HttpResponseRedirect
+from store.models import Tbl_usertype
+from store.forms import Tbl_usertypeForm
+from django .views import View
+from tbl_usersapp.models import Tbl_user
+from tbl_usersapp.models import Tbl_state
+from tbl_usersapp.forms import Tbl_stateForm
+from tbl_usersapp.forms import Tbl_userForm
+from tbl_usersapp.serializers import Tbl_userSerialize
+from tbl_usersapp.serializers import Tbl_stateSerialize
+from django.contrib import messages
+
+# Create your views here.
+
+              
+#============================================================================================================
+#=======================================       tbl_userapp           ========================================
+# this function will add new item and show all items in tbl_userapp
+
+def tbl_usershow(request):
+    if request.method == 'POST':
+        fom = Tbl_userForm(request.POST)
+        if fom.is_valid():
+            fom.save()
+            messages.success(request,'Data has been added')
+            fom = Tbl_userForm()
+    else:
+        fom = Tbl_userForm()
+    tbl_user = Tbl_user.objects.filter(isdeleted = 0)
+    Tbl_userSerializeobj = Tbl_userSerialize(tbl_user , many=True)
+    for r in Tbl_userSerializeobj.data:
+         userid = r["userid"]
+         stid = r["stateid"]
+         Tbl_s = Tbl_state.objects.get(stateid = stid)
+         stateid = Tbl_s.stateid
+         state_code = Tbl_s.state_code
+         state_name =Tbl_s.state_name
+         r.update({"stateid":stateid})
+         r.update({"state_code":state_code})
+         r.update({"state_name":state_name})
+    return render(request,'tbl_usershow.html', {'form':fom ,'Tbl_user':Tbl_userSerializeobj.data}) 
+    # return render(request , 'tbl_usershow.html', {'form':fom ,'Tbl_user':tbl_user })      
+
+
+
+   
+# this function will delete   
+
+def delete_userdata(request ,userid):
+    tbl_user = Tbl_user.objects.get(userid = userid)
+    tbl_user.isdeleted = 1
+    tbl_user.save()
+    return HttpResponseRedirect('/tbl_usershow')
+
+def edit_userdata(request, userid):
+    tbl_user = Tbl_user.objects.get(userid = userid) 
+    return render(request, 'tbl_usersedit.html', {'Tbl_user':tbl_user})
+    
+def update_userdata(request, userid):
+    tbl_user = Tbl_user.objects.get(userid = userid)
+    form = Tbl_userForm(request.POST, instance = tbl_user)    
+    form.save()
+    return HttpResponseRedirect('/tbl_usershow') 
+        
+ 
+
+def update_userdata(request ,userid): 
+    if request.method == 'POST':
+        tbl_user = Tbl_user.objects.get(pk = userid)
+        form = Tbl_userForm(request.POST, instance=tbl_user)
+        if form.is_valid():
+            form.save()
+    else:
+        tbl_user = Tbl_user.objects.get(pk = userid)
+        form = Tbl_userForm(instance=tbl_user)
+    return render(request , 'tbl_usersedit.html' , {'form':form})    
+              
+              
+              
+#============================================================================================               
+
+
+# how To display Multiple Table Into A Single Listview Element (3 tables)        
+
+def usermview(request):  
+    Tbl_userobj = Tbl_user.objects.all()
+    Tbl_userSerializeobj = Tbl_userSerialize(Tbl_userobj , many=True)
+    for r in Tbl_userSerializeobj.data:
+         userid = r["userid"]
+         stid = r["stateid"]
+         #print(r)
+         #print(stid,"1111")
+         Tbl_s = Tbl_state.objects.get(stateid = stid)
+         stateid = Tbl_s.stateid
+         state_code = Tbl_s.state_code
+         state_name =Tbl_s.state_name
+         r.update({"stateid":stateid})
+         r.update({"state_code":state_code})
+         r.update({"state_name":state_name})
+         
+    print(Tbl_userSerializeobj.data)
+    return render(request,'multipleTbl_userview.html', {'Tbl_user':Tbl_userSerializeobj.data})  
+ 
+ 
+
+def delete(request ,userid):
+    tbl_user = Tbl_user.objects.get(userid = userid)
+    tbl_user.delete()
+    return redirect("/usermview")
+
+
+def edit(request ,userid):
+    tbl_user = Tbl_user.objects.get(userid = userid) 
+    return render(request, 'edit.html', {'tbl_user':tbl_user})
+
+def update(request, userid):
+    tbl_user = Tbl_user.objects.get(userid = userid)
+    form = Tbl_userForm(request.POST, instance = tbl_user)    
+    form.save()
+    return redirect('/usermview') 
+
+
+
+
+
+
+# ===========================================Add State ================================================
+# this function will add new item and show all items in tbl_userapp
+
+def add_state1(request):
+    if request.method == "POST":
+        form = Tbl_stateForm(request.POST)
+        if form.is_valid():
+            try:
+                form.save()
+                return redirect("/add_state")
+            except:
+                pass
+    else:
+        form = Tbl_state()
+        tbl_state = Tbl_state.objects.all()
+    return render(request , 'addstate.html', {'form':form , 'Tbl_state':tbl_state})    
+
+
+def add_state(request):
+    if request.method == "POST":
+        frm = Tbl_stateForm(request.POST)
+        if frm.is_valid():
+            # try:
+            frm.save()
+            #     return redirect('/add_state')
+            # except:
+            #     pass
+    else:
+        frm = Tbl_state()
+        tbl_state = Tbl_state.objects.all()
+    return render(request , 'addstate.html' ,{'form':frm ,'Tbl_state':tbl_state }) 
+
+
+
+# this function will delete   
+
+def delete_state(request ,stateid):
+    tbl_state = Tbl_state.objects.get(stateid = stateid)
+    # tbl_state.isdeleted = 1
+    tbl_state.save()
+    return HttpResponseRedirect('/addstate')
+        
+
+
+def edit_state(request, stateid):
+    tbl_state = Tbl_state.objects.get(stateid = stateid) 
+    return render(request, 'edit_state.html', {'Tbl_state':tbl_state})
+    
+def update_state1(request, stateid):
+    tbl_state = Tbl_state.objects.get(stateid = stateid)
+    frm = Tbl_stateForm(request.POST, instance = tbl_state)    
+    frm.save()
+    return HttpResponseRedirect('/add_state')  
+
+
+def update_state(request ,stateid): 
+    if request.method == 'POST':
+        tbl_state = Tbl_state.objects.get(pk = stateid)
+        form = Tbl_stateForm(request.POST, instance=tbl_state)
+        if form.is_valid():
+            form.save()
+    else:
+        tbl_state = Tbl_state.objects.get(pk = stateid)
+        form = Tbl_stateForm(instance=tbl_state)
+    return render(request , 'edit_state.html' , {'form':form})      
+
+----------------------------------------------------------------------------------
+tbl_usershow.html
+
+{% extends 'base.html ' %} 
+{% block content %} 
+<div class="row">    
+<div class="col-sm-3">  
+<div class="border border-primary" style="padding:5px;">    
+<br/>
+<h4 class="text-center alert alert-info">ADD NEW  INFORMATIONS IN TBL_USER TABLE</h4> 
+<form action="" method="POST" style="font-size:30px">
+{% csrf_token %}
+{{form.as_p}}
+<input type="submit" class="btn btn-success" value="Add">
+</form>
+</div>
+</div> 
+
+
+
+
+<div class="col-sm-9" style="padding:2px;"> <div class="border border-primary" style="margin-left:5px">   
+    <br/>
+        <h4 class="text-center alert alert-info" style="margin:5px;">SHOW USER INFORMATIONS</h4> 
+       {% if Tbl_user %}
+        <h4>USER TABLE DATA</h4>
+        <table class="table table-hover" style="padding:5px;">
+            <caption>TBL_USER DATA</caption>
+              <thead id ="head" style="font-size:25px">
+                {% comment %} <th>userid</th> {% endcomment %}
+                {% comment %} <th>usertypeid</th> {% endcomment %}
+                <th>first_name</th>
+                <th>last_name</th>
+                <th>email</th>
+                <th>mobile</th>
+                {% comment %} <th>password</th> {% endcomment %}
+                <th>city</th>
+                {% comment %} <th>stateid</th> {% endcomment %}
+                {% comment %} <th>state_code</th> {% endcomment %}
+                <th>state_name</th>
+                {% comment %} <th>zipcode</th> {% endcomment %}
+                {% comment %} <th>status</th> {% endcomment %}
+                {% comment %} <th>isdeleted</th> {% endcomment %}
+                <th>dateon</th>
+                <th>Action1</th>
+                <th>Action2</th>
+            </thead>
+            <tbody>
+                {% for d in Tbl_user %}
+            <tr style="font-size:140%;">  
+            {% comment %} <td>{{ d.userid }}</td> {% endcomment %}
+            {% comment %} <td>{{ d.usertypeid }}</td> {% endcomment %}
+            <td>{{ d.first_name }}</td>
+            <td>{{ d.last_name }}</td>
+            <td>{{ d.email }}</td>
+            <td>{{ d.mobile }}</td>
+            {% comment %} <td>{{d.password}}</td> {% endcomment %}
+            <td>{{d.city}}</td>
+            {% comment %} <td>{{d.stateid}}</td> {% endcomment %}
+            {% comment %} <td>{{d.state_code}}</td> {% endcomment %}
+            <td>{{d.state_name}}</td>
+            {% comment %} <td>{{d.zipcode}}</td> {% endcomment %}
+            {% comment %} <td>{{d.status}}</td> {% endcomment %}
+            {% comment %} <td>{{d.isdeleted}}</td> {% endcomment %}
+            <td>{{d.dateon}}</td>
+            <td><a href="/update_userdata/{{ d.userid }}"><span><i class="fa fa-edit" style="font-size:36px"></i></span></a></td>
+            <td><a href="/delete_userdata/{{ d.userid }}" class="" onclick="return confirm('Are You Sure To Delete?')" ><span ><i class="fa fa-trash-o fa-lg" style="font-size:36px"></i></span></a></td>
+            </tr>
+          {% endfor %} 
+            </tbody>
+          </table>
+        
+       {% else %}
+    
+        <h4 class="text-center alert alert-warning">NO RECORDS IN TBL_USER TABLE</h4>
+        {% endif %} 
+</div>
+</div>  
+  
+
+{% endblock content %} 
+
+------------------------------------------------------------------------------------------------------------------
+tbl_useredit.html
+
+
+
+{% extends 'base.html ' %} 
+{% block content %} 
+<div class="row">    
+    <div class="col-sm-8 offset-2">  <div class="border border-primary" style="padding:5px;">  
+        <h4 class="text-center alert alert-info">UPDATE INFORMATIONS IN TBL_USERAPP </h4> 
+        <form action="" method="post">
+           {% csrf_token %}  
+           {{form.as_p}}
+           <input type= "submit" class="btn btn-success" value"Update">
+           <a href="{% url 'tbl_usershow' %}" class="btn btn-info">BACK TO HOME</a>
+        </form>
+        
+    </div>
+</div>
+{% endblock content %} 
+
+
+---------------------------------------------------------------------------------------------------------------------
+forms.py
+
+
+
+from django.core import validators
+from django import forms
+from django.forms import ModelForm, Select
+#from store.models import Tbl_usertype
+from tbl_usersapp.models import Tbl_user, Tbl_usertype
+#from store.models import Tbl_usertype
+#from tbl_usersapp.models import city
+#from tbl_usersapp.models import district
+#from tbl_usersapp.models import country
+from store.forms import Tbl_usertypeForm
+from tbl_usersapp.models import Tbl_state
+
+
+
+class Tbl_stateForm(forms.ModelForm):
+    class meta:
+        model = Tbl_state
+        fields = "__all__"
+        Widget = {
+             'stateid':forms.Select(attrs={'class':'form-control'}),
+             'state_code': forms.TextInput(attrs={'class':'form-control'}),
+             'state_name': forms.TextInput(attrs={'class':'form-control'}),
+            
+        }
+        
+                           
+
+class Tbl_userForm(forms.ModelForm):
+    class Meta:
+        model = Tbl_user
+        fields = "__all__"
+        #stateid = forms.TextInput()
+        #fields = ['stateid']
+        
+        widgets = {
+            'userid': forms.TextInput(attrs={'class':'form-control'}),
+            'usertypeid': forms.Select(attrs={'class':'form-control'}),
+            'first_name': forms.TextInput(attrs={'class':'form-control'}),
+            'last_name': forms.TextInput(attrs={'class':'form-control'}),
+            'email': forms.EmailInput(attrs={'class':'form-control'}),
+            'mobile': forms.TextInput(attrs={'class':'form-control'}),
+            'password': forms.PasswordInput(attrs={'class':'form-control'}),
+            'city': forms.TextInput(attrs={'class':'form-control'}),
+              'stateid':forms.Select(attrs={'class':'form-control'}),
+              'state_code': forms.TextInput(attrs={'class':'form-control'}),
+            'state_name': forms.TextInput(attrs={'class':'form-control'}),
+            'zipcode': forms.TextInput(attrs={'class':'form-control'}),
+            'status': forms.TextInput(attrs={'class':'form-control'}),
+            'isdeleted': forms.TextInput(attrs={'class':'form-control'}),
+            'dateon': forms.DateTimeInput(attrs={'class':'form-control'}),
+           
+        }
+ 
+
+--------------------------------------------------------------------------------------------------------------------
+serializers.py
+
+
+from rest_framework import serializers
+from tbl_usersapp.models import Tbl_user
+from tbl_usersapp.models import Tbl_state
+
+
+class Tbl_userSerialize(serializers.ModelSerializer):
+    class Meta:
+        model = Tbl_user
+        fields = "__all__"
+        
+class Tbl_stateSerialize(serializers.ModelSerializer):
+    class Meta:
+        model = Tbl_state
+        fields = "__all__"        
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

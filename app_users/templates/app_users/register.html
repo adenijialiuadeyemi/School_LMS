@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Registration Page{% endblock %}
+
+{% block content %}
+
+{% if registered %}
+<h1 class="card-body">Thank you for registering</h1>
+{% else %}
+<h1>Please, Enter your details</h1>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ user_form|crispy }}
+    {{ profile_form|crispy}}
+    <button type="submit" class="btn btn-primary">Register</button>
+</form>
+{% endif %}
+{% endblock %}
